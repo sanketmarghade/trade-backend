@@ -1,6 +1,7 @@
+from tradingview_ta import TA_Handler, Interval, Exchange
+from tradingview_ta import exceptions as tv_exceptions
 
-from tradingview_ta import TA_Handler, Interval, exceptions as tv_exceptions
-
+# map common interval strings -> Interval constants
 INTERVAL_MAP = {
     "1m": Interval.INTERVAL_1_MINUTE,
     "5m": Interval.INTERVAL_5_MINUTES,
@@ -18,8 +19,8 @@ def get_interval_constant(interval_str: str):
 
 def get_ta_summary(symbol: str, screener: str = "india", exchange: str = "NSE", interval: str = "1d"):
     """
-    Get TradingView technical analysis summary for an Indian stock.
-    Example: symbol="RELIANCE", exchange="NSE", screener="india"
+    Returns tradingview_ta analysis summary for a given symbol.
+    Use symbol like "RELIANCE" and exchange "NSE", screener "india".
     """
     try:
         handler = TA_Handler(
@@ -29,9 +30,19 @@ def get_ta_summary(symbol: str, screener: str = "india", exchange: str = "NSE", 
             interval=get_interval_constant(interval)
         )
         analysis = handler.get_analysis()
-        return {
-            "summary": analysis.summary,
+        # main summary recommendation + indicator values
+        summary = {
+            "RECOMMENDATION": analysis.summary.get("RECOMMENDATION"),
+            "BUY": analysis.summary.get("BUY"),
+            "NEUTRAL": analysis.summary.get("NEUTRAL"),
+            "SELL": analysis.summary.get("SELL"),
+            # raw indicators (a subset)
             "indicators": analysis.indicators,
+            "oscillators": analysis.moving_averages if hasattr(analysis, "moving_averages") else {},
         }
+        return summary
     except tv_exceptions.NoData:
-        raise Exception("No data returned. Check symbol/exchange/screener.")
+        raise Exception("No data returned for symbol/exchange/screener. Check symbol and that the market is open.")
+    except Exception as e:
+        # surface the underlying error
+        raise
