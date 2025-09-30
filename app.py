@@ -1,48 +1,45 @@
-from tradingview_ta import TA_Handler, Interval, Exchange
-from tradingview_ta import exceptions as tv_exceptions
+# app.py
+import os
+from flask import Flask, request, jsonify
+from trading_analysis import get_ta_summary, InvalidSymbolError
 
-# map common interval strings -> Interval constants
-INTERVAL_MAP = {
-    "1m": Interval.INTERVAL_1_MINUTE,
-    "5m": Interval.INTERVAL_5_MINUTES,
-    "15m": Interval.INTERVAL_15_MINUTES,
-    "30m": Interval.INTERVAL_30_MINUTES,
-    "1h": Interval.INTERVAL_1_HOUR,
-    "4h": Interval.INTERVAL_4_HOURS,
-    "1d": Interval.INTERVAL_1_DAY,
-    "1w": Interval.INTERVAL_1_WEEK,
-    "1M": Interval.INTERVAL_1_MONTH,
-}
+app = Flask(__name__)
 
-def get_interval_constant(interval_str: str):
-    return INTERVAL_MAP.get(interval_str, Interval.INTERVAL_1_DAY)
+@app.route("/")
+def index():
+    return jsonify({"status": "ok", "msg": "TradingView TA backend running"})
 
-def get_ta_summary(symbol: str, screener: str = "india", exchange: str = "NSE", interval: str = "1d"):
+@app.route("/api/analyze", methods=["POST"])
+def analyze():
     """
-    Returns tradingview_ta analysis summary for a given symbol.
-    Use symbol like "RELIANCE" and exchange "NSE", screener "india".
+    POST JSON body:
+    {
+      "symbol": "AAPL",
+      "screener": "america",       # optional, default "america"
+      "exchange": "NASDAQ",        # optional, default "NASDAQ"
+      "interval": "1d"             # optional: "1m","5m","15m","1h","1d",...
+    }
     """
+    data = request.get_json(force=True, silent=True) or {}
+    symbol = (data.get("symbol") or "").strip()
+    if not symbol:
+        return jsonify({"error": "missing 'symbol' in request body"}), 400
+
+    screener = data.get("screener", "america")
+    exchange = data.get("exchange", "NASDAQ")
+    interval = data.get("interval", "1d")
+
     try:
-        handler = TA_Handler(
-            symbol=symbol,
-            screener=screener,
-            exchange=exchange,
-            interval=get_interval_constant(interval)
-        )
-        analysis = handler.get_analysis()
-        # main summary recommendation + indicator values
-        summary = {
-            "RECOMMENDATION": analysis.summary.get("RECOMMENDATION"),
-            "BUY": analysis.summary.get("BUY"),
-            "NEUTRAL": analysis.summary.get("NEUTRAL"),
-            "SELL": analysis.summary.get("SELL"),
-            # raw indicators (a subset)
-            "indicators": analysis.indicators,
-            "oscillators": analysis.moving_averages if hasattr(analysis, "moving_averages") else {},
-        }
-        return summary
-    except tv_exceptions.NoData:
-        raise Exception("No data returned for symbol/exchange/screener. Check symbol and that the market is open.")
+        result = get_ta_summary(symbol=symbol, screener=screener, exchange=exchange, interval=interval)
+    except InvalidSymbolError as e:
+        return jsonify({"error": "invalid_symbol", "message": str(e)}), 400
     except Exception as e:
-        # surface the underlying error
-        raise
+        # For production, you might want to log this to stderr or an external logger
+        return jsonify({"error": "analysis_failed", "message": str(e)}), 500
+
+    return jsonify(result), 200
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    # for Render use $PORT; locally default 5000
+    app.run(host="0.0.0.0", port=port)
