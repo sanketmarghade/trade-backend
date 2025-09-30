@@ -1,4 +1,4 @@
-from tradingview_ta import TA_Handler, Interval, Exchange
+from tradingview_ta import TA_Handler, Interval
 from typing import Dict, Any
 
 class InvalidSymbolError(Exception):
@@ -17,7 +17,7 @@ _INTERVAL_MAP = {
 }
 
 _DEFAULT_SCREENER = "india"
-_DEFAULT_EXCHANGE = Exchange.NSE
+_DEFAULT_EXCHANGE = "NSE"   # use string, not Exchange.NSE
 
 def get_ta_summary(symbol: str, interval: str = "1d") -> Dict[str, Any]:
     symbol = symbol.strip().upper()
