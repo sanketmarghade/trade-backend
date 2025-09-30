@@ -1,45 +1,29 @@
-# app.py
-import os
 from flask import Flask, request, jsonify
 from trading_analysis import get_ta_summary, InvalidSymbolError
 
 app = Flask(__name__)
 
 @app.route("/")
-def index():
-    return jsonify({"status": "ok", "msg": "TradingView TA backend running"})
+def home():
+    return jsonify({"message": "TradingView_TA API for Indian market (NSE) is running."})
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
-    """
-    POST JSON body:
-    {
-      "symbol": "AAPL",
-      "screener": "america",       # optional, default "america"
-      "exchange": "NASDAQ",        # optional, default "NASDAQ"
-      "interval": "1d"             # optional: "1m","5m","15m","1h","1d",...
-    }
-    """
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.json or {}
     symbol = (data.get("symbol") or "").strip()
-    if not symbol:
-        return jsonify({"error": "missing 'symbol' in request body"}), 400
+    interval = (data.get("interval") or "1d").strip()
 
-    screener = data.get("screener", "america")
-    exchange = data.get("exchange", "NASDAQ")
-    interval = data.get("interval", "1d")
+    if not symbol:
+        return jsonify({"error": "symbol is required"}), 400
 
     try:
-        result = get_ta_summary(symbol=symbol, screener=screener, exchange=exchange, interval=interval)
+        result = get_ta_summary(symbol=symbol, interval=interval)
     except InvalidSymbolError as e:
-        return jsonify({"error": "invalid_symbol", "message": str(e)}), 400
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        # For production, you might want to log this to stderr or an external logger
-        return jsonify({"error": "analysis_failed", "message": str(e)}), 500
+        return jsonify({"error": "internal error", "detail": str(e)}), 500
 
-    return jsonify(result), 200
+    return jsonify(result)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    # for Render use $PORT; locally default 5000
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
