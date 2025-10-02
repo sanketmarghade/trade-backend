@@ -1,5 +1,3 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 from tradingview_ta import TA_Handler, Interval, Exchange
 
 # Map friendly interval strings to tradingview_ta constants
@@ -16,9 +14,17 @@ INTERVAL_MAP = {
     "1M": Interval.INTERVAL_1_MONTH,
 }
 
+
 def get_ta_summary(symbol: str, interval: str = "1d"):
     """
     Get technical analysis summary for an Indian stock (NSE).
+    
+    Args:
+        symbol (str): NSE stock symbol (e.g., "RELIANCE", "TCS", "INFY").
+        interval (str): Time interval (default: "1d").
+    
+    Returns:
+        dict: Analysis summary or error message
     """
     try:
         if interval not in INTERVAL_MAP:
@@ -32,37 +38,31 @@ def get_ta_summary(symbol: str, interval: str = "1d"):
         )
 
         analysis = handler.get_analysis()
+
+        if analysis is None:  # <-- prevent NoneType errors
+            return {"error": f"No analysis available for symbol '{symbol}' on interval '{interval}'."}
+
         return {
             "symbol": symbol,
             "interval": interval,
-            "summary": analysis.summary,
-            "indicators": analysis.indicators,
-            "oscillators": analysis.oscillators,
-            "moving_averages": analysis.moving_averages,
+            "summary": getattr(analysis, "summary", {}),
+            "indicators": getattr(analysis, "indicators", {}),
+            "oscillators": getattr(analysis, "oscillators", {}),
+            "moving_averages": getattr(analysis, "moving_averages", {}),
         }
 
     except Exception as e:
         return {"error": str(e)}
 
-# ---------------- Flask API ----------------
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all domains
-
-@app.route("/")
-def home():
-    return jsonify({"message": "NSE Technical Analysis API is running 🚀"})
-
-@app.route("/api/analyze", methods=["POST"])
-def analyze():
-    data = request.json or {}
-    symbol = data.get("symbol", "").strip().upper()
-    interval = data.get("interval", "1d").strip()
-
-    if not symbol:
-        return jsonify({"error": "Missing 'symbol' parameter"}), 400
-
-    result = get_ta_summary(symbol, interval)
-    return jsonify(result)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Example usage
+    symbol = input("Enter NSE stock symbol (e.g., RELIANCE, TCS, INFY): ").strip().upper()
+    interval = input("Enter interval (1m,5m,15m,30m,1h,2h,4h,1d,1w,1M): ").strip()
+
+    if not interval:
+        interval = "1d"  # default
+
+    result = get_ta_summary(symbol, interval)
+    print("\n=== Technical Analysis Result ===")
+    print(result)
