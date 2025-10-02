@@ -2,3 +2,4 @@ Flask
 gunicorn
 tradingview_ta
 requests
+flask_cors
