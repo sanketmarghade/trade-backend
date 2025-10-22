@@ -4,16 +4,16 @@ from tradingview_ta import TA_Handler, Interval, Exchange
 
 # Map friendly interval strings to tradingview_ta constants
 INTERVAL_MAP = {
-    "1 Minute": Interval.INTERVAL_1_MINUTE,
-    "5 Minute": Interval.INTERVAL_5_MINUTES,
-    "15 Minute": Interval.INTERVAL_15_MINUTES,
-    "30 Minute": Interval.INTERVAL_30_MINUTES,
-    "1 Hour": Interval.INTERVAL_1_HOUR,
-    "2 Hours": Interval.INTERVAL_2_HOURS,
-    "4 Hours": Interval.INTERVAL_4_HOURS,
-    "1 Day": Interval.INTERVAL_1_DAY,
-    "1 Week": Interval.INTERVAL_1_WEEK,
-    "1 Month": Interval.INTERVAL_1_MONTH,
+    "1m": Interval.INTERVAL_1_MINUTE,
+    "5m": Interval.INTERVAL_5_MINUTES,
+    "15m": Interval.INTERVAL_15_MINUTES,
+    "30m": Interval.INTERVAL_30_MINUTES,
+    "1h": Interval.INTERVAL_1_HOUR,
+    "2h": Interval.INTERVAL_2_HOURS,
+    "4h": Interval.INTERVAL_4_HOURS,
+    "D": Interval.INTERVAL_1_DAY,
+    "W": Interval.INTERVAL_1_WEEK,
+    "M": Interval.INTERVAL_1_MONTH,
 }
 
 def get_ta_summary(symbol: str, interval: str = "1d"):
