@@ -11,9 +11,9 @@ INTERVAL_MAP = {
     "1h": Interval.INTERVAL_1_HOUR,
     "2h": Interval.INTERVAL_2_HOURS,
     "4h": Interval.INTERVAL_4_HOURS,
-    "D": Interval.INTERVAL_1_DAY,
-    "W": Interval.INTERVAL_1_WEEK,
-    "M": Interval.INTERVAL_1_MONTH,
+    "1D": Interval.INTERVAL_1_DAY,
+    "1W": Interval.INTERVAL_1_WEEK,
+    "1M": Interval.INTERVAL_1_MONTH,
 }
 
 def get_ta_summary(symbol: str, interval: str = "1d"):
