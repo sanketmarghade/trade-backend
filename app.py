@@ -16,7 +16,7 @@ INTERVAL_MAP = {
     "1M": Interval.INTERVAL_1_MONTH,
 }
 
-def get_ta_summary(symbol: str, interval: str = "1d"):
+def get_ta_summary(symbol: str, interval: str = "1D"):
     """
     Get technical analysis summary for an Indian stock (NSE).
     """
